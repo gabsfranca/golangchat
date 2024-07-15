@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+</head>
+<body>
+    <div id="chat">
+        <div id="messages"></div>
+        <input id="message" type="text">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8080/ws');
+
+        ws.onmessage = function(event) {
+            const msg = JSON.parse(event.data);
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `[${msg.timestamp}] ${msg.username}: ${msg.message}`;
+            document.getElementById('messages').appendChild(messageElement);
+        };
+
+        function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value;
+            const username = getUsernameFromCookie();
+
+            if (username && message) {
+                const msg = { username: username, message: message };
+                ws.send(JSON.stringify(msg));
+                messageInput.value = '';
+            } else {
+                console.error("Nome de usuário ou mensagem vazia");
+            }
+        }
+
+        function getUsernameFromCookie() {
+            const cookie = document.cookie;
+            const match = cookie.match(/(?:^|;\s*)username\s*=\s*([^;]*)/);
+            return match ? match[1] : null;
+        }
+    </script>
+</body>
+</html>
